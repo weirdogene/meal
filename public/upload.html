@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>식단표 업로드(관리자)</title>
+  <style>
+    :root{--bg:#0b1220;--card:#121a2b;--text:#e8eefc;--muted:#a9b6d6;--line:rgba(255,255,255,.12);--accent:#61dafb;}
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0b1220,#070b13);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    .wrap{max-width:760px;margin:0 auto;padding:18px}
+    .card{background:rgba(18,26,43,.92);border:1px solid var(--line);border-radius:16px;padding:16px}
+    .h1{font-size:18px;font-weight:800;margin:0 0 4px}
+    .p{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.5}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+    select,input{width:100%;padding:12px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);outline:none}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn{margin-top:12px;width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(135deg,rgba(97,218,251,.20),rgba(124,92,255,.18));color:var(--text);font-weight:800;cursor:pointer}
+    .btn:hover{filter:brightness(1.08)}
+    .note{margin-top:12px;font-size:12px;color:var(--muted)}
+    .out{margin-top:12px;padding:12px;border-radius:12px;border:1px dashed var(--line);background:rgba(0,0,0,.15);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap}
+    a{color:var(--accent)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="h1">식단표 업로드 (관리자)</h1>
+      <p class="p">엑셀 파일을 업로드하면 서버가 파싱해서 직원들이 보는 화면(index)에 즉시 반영합니다.</p>
+
+      <div class="row">
+        <div>
+          <label>사이트</label>
+          <select id="site">
+            <option value="main">본관</option>
+            <option value="cancer">암병원</option>
+          </select>
+        </div>
+        <div>
+          <label>관리자 토큰 (x-admin-token)</label>
+          <input id="token" placeholder="예: changeme" />
+        </div>
+      </div>
+
+      <label>엑셀 파일(.xlsx)</label>
+      <input id="file" type="file" accept=".xlsx" />
+
+      <button class="btn" id="upload">업로드</button>
+
+      <div class="note">업로드 후 직원용 화면: <a href="/" target="_blank" rel="noopener noreferrer">/ (index)</a></div>
+      <div class="out" id="out">대기중...</div>
+    </div>
+  </div>
+
+  <script>
+    const out = document.getElementById('out');
+    const btn = document.getElementById('upload');
+
+    function log(msg){ out.textContent = msg; }
+
+    btn.onclick = async () => {
+      const site = document.getElementById('site').value;
+      const token = document.getElementById('token').value.trim();
+      const file = document.getElementById('file').files[0];
+      if (!file) return log('엑셀 파일을 선택해주세요.');
+      if (!token) return log('관리자 토큰을 입력해주세요.');
+
+      const fd = new FormData();
+      fd.append('site', site);
+      fd.append('file', file);
+
+      log('업로드 중...');
+      try{
+        const r = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'x-admin-token': token },
+          body: fd
+        });
+        const j = await r.json();
+        if (!r.ok) throw new Error(JSON.stringify(j, null, 2));
+        log('완료!\n' + JSON.stringify(j, null, 2));
+      }catch(e){
+        log('업로드 실패\n' + String(e.message || e));
+      }
+    };
+  </script>
+</body>
+</html>

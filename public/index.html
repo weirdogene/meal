@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>식단표</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#121a2b;
+      --card2:#0f1728;
+      --text:#e8eefc;
+      --muted:#a9b6d6;
+      --line:rgba(255,255,255,.10);
+      --accent:#61dafb;
+      --accent2:#7c5cff;
+      --good:#4ade80;
+      --bad:#fb7185;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --r:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.25), transparent 60%),
+                  radial-gradient(900px 450px at 90% 0%, rgba(97,218,251,.18), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:820px;margin:0 auto;padding:16px 12px 28px}
+    header{
+      position:sticky; top:0; z-index:5;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(to bottom, rgba(11,18,32,.85), rgba(11,18,32,.55));
+      border-bottom:1px solid var(--line);
+    }
+    .head{
+      max-width:820px;margin:0 auto;padding:14px 12px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .title{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .title .h{font-size:18px;font-weight:800;letter-spacing:-.2px}
+    .title .s{font-size:12px;color:var(--muted)}
+
+    .tabs{display:flex;gap:8px}
+    .tab{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      border-color: rgba(97,218,251,.45);
+      background: linear-gradient(135deg, rgba(97,218,251,.18), rgba(124,92,255,.18));
+    }
+
+    .panel{margin-top:14px}
+    .weekbar{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:var(--r);
+      padding:10px;
+      box-shadow:var(--shadow);
+    }
+    .weekbarTop{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+    .weekTitle{font-size:13px;font-weight:700}
+    .meta{font-size:11px;color:var(--muted);text-align:right}
+
+    .days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .dayBtn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      border-radius:14px;
+      padding:10px 6px;
+      cursor:pointer;
+      text-align:center;
+    }
+    .dayBtn .dow{font-size:11px;color:var(--muted);margin-bottom:3px}
+    .dayBtn .d{font-size:12px;font-weight:800}
+    .dayBtn.active{
+      border-color: rgba(97,218,251,.55);
+      box-shadow: 0 0 0 3px rgba(97,218,251,.10);
+      background: linear-gradient(135deg, rgba(97,218,251,.16), rgba(124,92,255,.14));
+    }
+    .cards{margin-top:14px;display:grid;gap:10px}
+    .card{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border-radius:var(--r);
+      padding:12px 12px 10px;
+      box-shadow:var(--shadow);
+    }
+    .cardHead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+    .cardHead .name{font-size:14px;font-weight:800}
+    .cardHead .count{font-size:11px;color:var(--muted)}
+
+    ul{margin:0;padding-left:18px}
+    li{margin:6px 0;line-height:1.25}
+    .empty{color:var(--muted);font-size:13px}
+
+    .extras{
+      margin-top:10px;
+      border-top:1px dashed rgba(255,255,255,.14);
+      padding-top:10px;
+    }
+    details{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+      padding:10px 10px;
+    }
+    summary{cursor:pointer;font-weight:800;font-size:13px}
+    .pill{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      font-size:11px;
+      color:var(--muted);
+      margin-left:8px;
+    }
+    .alert{
+      margin-top:14px;
+      border:1px solid rgba(251,113,133,.35);
+      background: rgba(251,113,133,.08);
+      color: var(--text);
+      border-radius: var(--r);
+      padding:12px;
+      font-size:13px;
+    }
+    .hint{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-size:12px;
+      font-weight:700;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="head">
+      <div class="title">
+        <div class="h">주간 식단표</div>
+        <div class="s" id="subtitle">데이터를 불러오는 중…</div>
+      </div>
+      <div class="tabs" role="tablist" aria-label="site">
+        <button class="tab active" data-site="main" type="button">본관</button>
+        <button class="tab" data-site="cancer" type="button">암병원</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="weekbar">
+        <div class="weekbarTop">
+          <div class="weekTitle" id="weekTitle">이번 주</div>
+          <div class="meta" id="meta">—</div>
+        </div>
+        <div class="days" id="days"></div>
+      </div>
+
+      <div class="cards" id="cards"></div>
+
+      <div class="alert" id="alert" style="display:none"></div>
+      <div class="hint">
+        ※ 이 화면은 서버에서 제공하는 최신 주차 데이터를 표시합니다. 관리자 업로드가 아직 없으면 데모 화면이 보일 수 있어요.
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="reload" type="button">새로고침</button>
+        <button class="btn" id="admin" type="button" onclick="location.href='/upload.html'">관리자 업로드</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const DOW = ['일','월','화','수','목','금','토'];
+
+    const state = {
+      site: 'main',
+      weekStart: null,
+      data: null,
+      selectedDate: null,
+    };
+
+    function fmtDate(iso){
+      const d = new Date(iso + 'T00:00:00');
+      return `${d.getMonth()+1}/${d.getDate()} (${DOW[d.getDay()]})`;
+    }
+
+    function mondayPlus(weekStart, offset){
+      const d = new Date(weekStart + 'T00:00:00');
+      d.setDate(d.getDate() + offset);
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const da = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${da}`;
+    }
+
+    function setAlert(msg){
+      const el = document.getElementById('alert');
+      if (!msg){ el.style.display='none'; el.textContent=''; return; }
+      el.style.display='block';
+      el.textContent = msg;
+    }
+
+    function renderDays(){
+      const daysEl = document.getElementById('days');
+      daysEl.innerHTML = '';
+      if (!state.weekStart){ return; }
+      for (let i=0;i<7;i++){
+        const iso = mondayPlus(state.weekStart, i);
+        const d = new Date(iso + 'T00:00:00');
+        const btn = document.createElement('button');
+        btn.type='button';
+        btn.className = 'dayBtn' + (state.selectedDate===iso ? ' active':'');
+        btn.innerHTML = `<div class="dow">${DOW[d.getDay()]}</div><div class="d">${d.getMonth()+1}/${d.getDate()}</div>`;
+        btn.onclick = () => { state.selectedDate = iso; render(); };
+        daysEl.appendChild(btn);
+      }
+    }
+
+    function renderMealCard(title, items){
+      const arr = Array.isArray(items) ? items : [];
+      const card = document.createElement('div');
+      card.className='card';
+      const count = arr.length ? `${arr.length}개` : '—';
+      card.innerHTML = `<div class="cardHead"><div class="name">${title}</div><div class="count">${count}</div></div>`;
+      if (!arr.length){
+        const p = document.createElement('div');
+        p.className='empty';
+        p.textContent='표시할 메뉴가 없습니다.';
+        card.appendChild(p);
+        return card;
+      }
+      const ul = document.createElement('ul');
+      for (const it of arr){
+        const li = document.createElement('li');
+        li.textContent = it;
+        ul.appendChild(li);
+      }
+      card.appendChild(ul);
+      return card;
+    }
+
+    function renderExtras(extras){
+      if (!extras || typeof extras !== 'object') return null;
+      const keys = Object.keys(extras);
+      if (!keys.length) return null;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'extras';
+
+      const det = document.createElement('details');
+      const total = keys.reduce((s,k)=>s + (extras[k]?.length||0), 0);
+      det.innerHTML = `<summary>더보기 <span class="pill">${total}개</span></summary>`;
+
+      const inner = document.createElement('div');
+      inner.style.marginTop='10px';
+
+      for (const k of keys){
+        const label = ({night:'야식', salad:'샐러드', corner:'코너'})[k] || k;
+        inner.appendChild(renderMealCard(label, extras[k]));
+      }
+      det.appendChild(inner);
+      wrap.appendChild(det);
+      return wrap;
+    }
+
+    function render(){
+      const subtitle = document.getElementById('subtitle');
+      const weekTitle = document.getElementById('weekTitle');
+      const meta = document.getElementById('meta');
+      const cards = document.getElementById('cards');
+
+      subtitle.textContent = state.site === 'main' ? '본관' : '암병원';
+      weekTitle.textContent = state.weekStart ? `주차 시작: ${state.weekStart}` : '이번 주';
+      meta.textContent = state.data?.source?.filename ? `source: ${state.data.source.filename}` : '—';
+
+      renderDays();
+
+      cards.innerHTML='';
+      const day = state.selectedDate;
+      const dayData = state.data?.days?.[day];
+
+      if (!state.data){
+        cards.appendChild(renderMealCard('조식', []));
+        cards.appendChild(renderMealCard('중식', []));
+        cards.appendChild(renderMealCard('석식', []));
+        return;
+      }
+
+      if (!dayData){
+        const box = document.createElement('div');
+        box.className='card';
+        box.innerHTML = `<div class="cardHead"><div class="name">${fmtDate(day)}</div><div class="count">—</div></div>`;
+        const p = document.createElement('div');
+        p.className='empty';
+        p.textContent = '해당 날짜의 데이터가 없습니다.';
+        box.appendChild(p);
+        cards.appendChild(box);
+        return;
+      }
+
+      cards.appendChild(renderMealCard('조식', dayData.breakfast));
+      cards.appendChild(renderMealCard('중식', dayData.lunch));
+      cards.appendChild(renderMealCard('석식', dayData.dinner));
+      const ex = renderExtras(dayData.extras);
+      if (ex) cards.appendChild(ex);
+    }
+
+    async function loadFromServer(){
+      setAlert('');
+      try{
+        const latestRes = await fetch(`/api/weeks/latest?site=${encodeURIComponent(state.site)}`);
+        if (!latestRes.ok) throw new Error((await latestRes.json()).error || 'latest failed');
+        const latest = await latestRes.json();
+        state.weekStart = latest.weekStart;
+        state.selectedDate = state.weekStart;
+        const dataRes = await fetch(`/api/weeks/${encodeURIComponent(state.weekStart)}?site=${encodeURIComponent(state.site)}`);
+        if (!dataRes.ok) throw new Error((await dataRes.json()).error || 'week failed');
+        state.data = await dataRes.json();
+        document.getElementById('subtitle').textContent = `${state.site === 'main' ? '본관' : '암병원'} · ${fmtDate(state.selectedDate)}`;
+      } catch (e) {
+        // Fallback demo data
+        state.weekStart = '2026-01-12';
+        state.selectedDate = state.weekStart;
+        state.data = {
+          site: state.site,
+          source: { filename: '데모 데이터(서버 업로드 전)' },
+          weekStart: state.weekStart,
+          days: {
+            '2026-01-12': { breakfast:['잡곡밥','계란국','김치'], lunch:['제육볶음','상추겉절이','된장국'], dinner:['카레라이스','단무지'], extras:{night:['우유','바나나']} },
+            '2026-01-13': { breakfast:['토스트','우유'], lunch:['김치찌개','생선구이'], dinner:['비빔밥'] }
+          }
+        };
+        setAlert('아직 서버에 업로드된 데이터가 없어서 데모 데이터를 표시합니다. (관리자 업로드 후 자동으로 실제 데이터로 바뀝니다)');
+      }
+      render();
+    }
+
+    function bindTabs(){
+      document.querySelectorAll('.tab').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.site = btn.dataset.site;
+          state.weekStart = null;
+          state.data = null;
+          state.selectedDate = null;
+          loadFromServer();
+        };
+      });
+    }
+
+    document.getElementById('reload').onclick = () => loadFromServer();
+
+    bindTabs();
+    loadFromServer();
+  </script>
+</body>
+</html>
